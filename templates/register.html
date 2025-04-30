@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+<div class="max-w-md mx-auto mt-10 bg-white p-6 rounded shadow">
+    <h1 class="text-xl font-bold mb-4">Регистрация</h1>
+    <form method="post" action="/register" class="space-y-4">
+        <input type="text" name="username" placeholder="Логин" required class="w-full p-2 border rounded">
+        <input type="password" name="password" placeholder="Пароль" required class="w-full p-2 border rounded">
+        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded">Зарегистрироваться</button>
+    </form>
+    <p class="mt-4">Уже есть аккаунт? <a href="/login" class="text-blue-500">Войти</a></p>
+</div>
+</body>
+</html>

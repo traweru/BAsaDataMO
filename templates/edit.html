@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Редактировать отзыв</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+<div class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
+    <h1 class="text-xl font-bold mb-4">Редактировать отзыв</h1>
+    <form method="post" action="/edit/{{ review[0] }}" class="space-y-4">
+        <select name="service_id" class="w-full p-2 border rounded" required>
+            {% for service in services %}
+                <option value="{{ service[0] }}" {% if service[0] == review[2] %}selected{% endif %}>
+                    {{ service[1] }}
+                </option>
+            {% endfor %}
+        </select>
+        <select name="rating" class="w-full p-2 border rounded">
+            {% for i in range(5, 0, -1) %}
+                <option value="{{ i }}" {% if i == review[3] %}selected{% endif %}>{{ "★" * i }}</option>
+            {% endfor %}
+        </select>
+        <textarea name="comment" class="w-full p-2 border rounded" required>{{ review[4] }}</textarea>
+        <div class="flex justify-between">
+            <a href="/" class="text-gray-500">← Назад</a>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Сохранить</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

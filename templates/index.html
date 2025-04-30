@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отзывы</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+<div class="max-w-2xl mx-auto p-6 bg-white shadow rounded-xl mt-8">
+    {% if user %}
+        <p class="mb-4">Вы вошли как <strong>{{ user[1] }}</strong> (<a class="text-blue-500 underline" href="/logout">Выйти</a>)</p>
+        <form action="/add" method="post" class="space-y-4">
+            <select name="service_id" class="w-full p-2 border rounded" required>
+                {% for service in services %}
+                    <option value="{{ service[0] }}">{{ service[1] }}</option>
+                {% endfor %}
+            </select>
+            <select name="rating" class="w-full p-2 border rounded">
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐</option>
+                <option value="3">⭐⭐⭐</option>
+                <option value="2">⭐⭐</option>
+                <option value="1">⭐</option>
+            </select>
+            <textarea name="comment" placeholder="Комментарий..." class="w-full p-2 border rounded" required></textarea>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Оставить отзыв</button>
+        </form>
+    {% else %}
+        <p class="mb-4">Чтобы оставить отзыв, <a class="text-blue-500 underline" href="/login">войдите</a> или <a class="text-blue-500 underline" href="/register">зарегистрируйтесь</a>.</p>
+    {% endif %}
+</div>
+
+{% if user and user[2] == "admin" %}
+    
+    <div class="max-w-2xl mx-auto mt-6 p-6 bg-white shadow rounded-xl">
+        <h2 class="text-xl font-semibold mb-4 text-center">Добавить новую категорию</h2>
+        <form method="post" action="/add_service" class="space-y-4">
+            <input type="text" name="name" placeholder="Название категории" class="w-full p-2 border rounded" required>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Добавить категорию</button>
+        </form>
+    </div>
+{% endif %}
+
+<div class="max-w-2xl mx-auto mt-6 p-6 bg-white shadow rounded-xl">
+    <h2 class="text-xl font-semibold mb-4 text-center">Отзывы</h2>
+    {% for r in reviews %}
+        <div class="mb-4 border-b pb-4">
+            <p><strong>{{ r[1] }}</strong> о <em>{{ r[2] }}</em> — <span class="text-yellow-500">{{ "★" * r[3] }}</span></p>
+            <p class="text-sm text-gray-500">{{ r[5][:19].replace("T", " ") }}</p>
+            <p>{{ r[4] }}</p>
+            {% if user and user[0] == r[6] %}
+                <div class="flex gap-4">
+                    <form method="post" action="/delete/{{ r[0] }}">
+                        <button class="text-red-500 text-sm hover:underline">Удалить</button>
+                    </form>
+                    <a href="/edit/{{ r[0] }}" class="text-blue-500 text-sm hover:underline">Редактировать</a>
+                </div>
+            {% elif user and user[2] == "admin" %}
+                <form method="post" action="/delete/{{ r[0] }}">
+                    <button class="text-red-500 text-sm hover:underline">Удалить</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>
