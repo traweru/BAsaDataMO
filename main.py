@@ -65,17 +65,29 @@ def get_current_user(request: Request):
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+async def index(request: Request, q: str = "", service_filter: str = ""):
     user = get_current_user(request)
     conn, cur = get_db()
 
-    cur.execute("""
+    query_sql = """
         SELECT reviews.id, users.username, services.name, reviews.rating, reviews.comment, reviews.timestamp, reviews.user_id
         FROM reviews
         JOIN users ON reviews.user_id = users.id
         JOIN services ON reviews.service_id = services.id
-        ORDER BY reviews.timestamp DESC
-    """)
+        WHERE 1=1
+    """
+    params = []
+
+    if q:
+        query_sql += " AND reviews.comment LIKE ?"
+        params.append(f"%{q}%")
+
+    if service_filter:
+        query_sql += " AND services.id = ?"
+        params.append(service_filter)
+
+    query_sql += " ORDER BY reviews.timestamp DESC"
+    cur.execute(query_sql, params)
     reviews = cur.fetchall()
 
     cur.execute("SELECT id, name FROM services")
@@ -86,7 +98,9 @@ async def index(request: Request):
         "request": request,
         "user": user,
         "reviews": reviews,
-        "services": services
+        "services": services,
+        "query": q,
+        "service_filter": service_filter
     })
 
 
@@ -178,6 +192,9 @@ def add_service(request: Request, name: str = Form(...)):
     conn.commit()
     conn.close()
     return RedirectResponse("/", status_code=303)
+
+
+# Новый роут для редактирования
 @app.get("/edit/{review_id}", response_class=HTMLResponse)
 def edit_form(request: Request, review_id: int):
     user = get_current_user(request)
@@ -185,24 +202,20 @@ def edit_form(request: Request, review_id: int):
         return RedirectResponse("/login", status_code=303)
 
     conn, cur = get_db()
-    # Проверка на автора или админа
     cur.execute("SELECT * FROM reviews WHERE id = ?", (review_id,))
     review = cur.fetchone()
-    if not review or (review[1] != user[0] and user[2] != "admin"):
+    if not review:
         conn.close()
-        return RedirectResponse("/", status_code=303)
+        return HTMLResponse("Отзыв не найден", status_code=404)
 
-    # Достать все сервисы для выбора в форме
+    if review[1] != user[0] and user[2] != "admin":
+        conn.close()
+        return HTMLResponse("Доступ запрещён", status_code=403)
+
     cur.execute("SELECT id, name FROM services")
     services = cur.fetchall()
     conn.close()
-
-    return templates.TemplateResponse("edit.html", {
-        "request": request,
-        "review": review,
-        "services": services,
-        "user": user
-    })
+    return templates.TemplateResponse("edit.html", {"request": request, "review": review, "services": services})
 
 
 @app.post("/edit/{review_id}")
@@ -212,15 +225,17 @@ def edit_review(request: Request, review_id: int, service_id: int = Form(...), r
         return RedirectResponse("/login", status_code=303)
 
     conn, cur = get_db()
-    # Проверка на автора или админа
     cur.execute("SELECT user_id FROM reviews WHERE id = ?", (review_id,))
     row = cur.fetchone()
-    if not row or (row[0] != user[0] and user[2] != "admin"):
+    if not row:
         conn.close()
-        return RedirectResponse("/", status_code=303)
+        return HTMLResponse("Отзыв не найден", status_code=404)
 
-    cur.execute("UPDATE reviews SET service_id = ?, rating = ?, comment = ? WHERE id = ?",
-                (service_id, rating, comment, review_id))
+    if row[0] != user[0] and user[2] != "admin":
+        conn.close()
+        return HTMLResponse("Доступ запрещён", status_code=403)
+
+    cur.execute("UPDATE reviews SET service_id = ?, rating = ?, comment = ? WHERE id = ?", (service_id, rating, comment, review_id))
     conn.commit()
     conn.close()
     return RedirectResponse("/", status_code=303)

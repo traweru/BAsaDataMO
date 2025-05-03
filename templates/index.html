@@ -6,7 +6,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-900">
-
 <div class="max-w-2xl mx-auto p-6 bg-white shadow rounded-xl mt-8">
     {% if user %}
         <p class="mb-4">Вы вошли как <strong>{{ user[1] }}</strong> (<a class="text-blue-500 underline" href="/logout">Выйти</a>)</p>
@@ -32,18 +31,24 @@
 </div>
 
 {% if user and user[2] == "admin" %}
-    
-    <div class="max-w-2xl mx-auto mt-6 p-6 bg-white shadow rounded-xl">
-        <h2 class="text-xl font-semibold mb-4 text-center">Добавить новую категорию</h2>
-        <form method="post" action="/add_service" class="space-y-4">
-            <input type="text" name="name" placeholder="Название категории" class="w-full p-2 border rounded" required>
-            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Добавить категорию</button>
-        </form>
-    </div>
+    <p class="text-center mt-4"><a href="/add_service" class="text-blue-500 underline">Добавить новую категорию</a></p>
 {% endif %}
 
 <div class="max-w-2xl mx-auto mt-6 p-6 bg-white shadow rounded-xl">
     <h2 class="text-xl font-semibold mb-4 text-center">Отзывы</h2>
+
+    <!-- Форма поиска и фильтра -->
+    <form method="get" action="/" class="flex flex-col md:flex-row gap-2 mb-4">
+        <input type="text" name="q" placeholder="Поиск по комментариям..." value="{{ query or '' }}" class="flex-1 p-2 border rounded">
+        <select name="service_filter" class="p-2 border rounded">
+            <option value="">Все категории</option>
+            {% for service in services %}
+                <option value="{{ service[0] }}" {% if service[0]|string == service_filter %}selected{% endif %}>{{ service[1] }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Найти</button>
+    </form>
+
     {% for r in reviews %}
         <div class="mb-4 border-b pb-4">
             <p><strong>{{ r[1] }}</strong> о <em>{{ r[2] }}</em> — <span class="text-yellow-500">{{ "★" * r[3] }}</span></p>
@@ -64,6 +69,5 @@
         </div>
     {% endfor %}
 </div>
-
 </body>
 </html>
